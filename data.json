@@ -1,0 +1,50 @@
+{
+  "lastUpdate": "2025-05-27 16:00:00",
+  "nav": {
+    "current": 1.2345,
+    "change": 0.0123,
+    "changePercent": 1.01,
+    "totalReturn": 23.45
+  },
+  "fund": {
+    "totalAssets": 120.5,
+    "totalShares": 97.6,
+    "investors": 3
+  },
+  "navHistory": [
+    {"date": "2025-05-20", "nav": 1.2000},
+    {"date": "2025-05-21", "nav": 1.2100},
+    {"date": "2025-05-22", "nav": 1.2180},
+    {"date": "2025-05-23", "nav": 1.2250},
+    {"date": "2025-05-24", "nav": 1.2300},
+    {"date": "2025-05-27", "nav": 1.2345}
+  ],
+  "positions": {
+    "aStock": 60,
+    "hkStock": 25,
+    "usStock": 10,
+    "cash": 5
+  },
+  "holdings": [
+    {"code": "000001", "name": "平安银行", "percentage": 15.2, "weeklyChange": 3.45},
+    {"code": "000002", "name": "万科A", "percentage": 12.8, "weeklyChange": -1.23},
+    {"code": "600036", "name": "招商银行", "percentage": 10.5, "weeklyChange": 2.67}
+  ],
+  "monthly": {
+    "monthlyReturn": 5.67,
+    "annualReturn": 18.9,
+    "maxDrawdown": -8.23,
+    "sharpeRatio": 1.35
+  },
+  "monthlyReturns": [
+    {"month": "1月", "return": 3.2},
+    {"month": "2月", "return": -1.5},
+    {"month": "3月", "return": 8.7},
+    {"month": "4月", "return": 2.1},
+    {"month": "5月", "return": 5.67}
+  ],
+  "trades": [
+    {"date": "2025-05-20", "code": "000001", "action": "买入", "quantity": "1000股", "price": "12.34元"},
+    {"date": "2025-05-22", "code": "600036", "action": "买入", "quantity": "500股", "price": "45.67元"}
+  ]
+}
