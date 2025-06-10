@@ -289,11 +289,6 @@
                     <div class="value" id="max-drawdown">-8.23%</div>
                     <div class="change">历史最大</div>
                 </div>
-                <div class="stat-card">
-                    <h3>夏普比率</h3>
-                    <div class="value" id="sharpe-ratio">1.35</div>
-                    <div class="change">风险调整后收益</div>
-                </div>
             </div>
 
             <div class="chart-container">
@@ -333,175 +328,123 @@
 </div>
 
 <script>
+    // CSV解析工具
+    function parseCSV(text) {
+        const lines = text.trim().split('\n');
+        const headers = lines[0].split(',');
+        return lines.slice(1).map(line => {
+            const cols = line.split(',');
+            let obj = {};
+            headers.forEach((h, i) => obj[h] = cols[i]);
+            return obj;
+        });
+    }
+
     // 标签页切换
     function showTab(tabName) {
-        // 隐藏所有标签页
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        document.querySelectorAll('.nav-item').forEach(nav => {
-            nav.classList.remove('active');
-        });
-
-        // 显示选中的标签页
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
         document.getElementById(tabName).classList.add('active');
         event.target.classList.add('active');
     }
 
-    // 图表配置
-    Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif";
-    Chart.defaults.color = '#495057';
+    // 图表对象
+    let navChart, positionChart, monthlyChart;
 
-    // 净值走势图
-    const navCtx = document.getElementById('navChart').getContext('2d');
-    const navChart = new Chart(navCtx, {
-        type: 'line',
-        data: {
-            labels: ['5-20', '5-21', '5-22', '5-23', '5-24', '5-27'],
-            datasets: [{
-                label: '单位净值',
-                data: [1.2000, 1.2100, 1.2180, 1.2250, 1.2300, 1.2345],
-                borderColor: '#4facfe',
-                backgroundColor: 'rgba(79, 172, 254, 0.1)',
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: false,
-                    grid: {
-                        color: 'rgba(0,0,0,0.1)'
-                    }
-                },
-                x: {
-                    grid: {
-                        color: 'rgba(0,0,0,0.1)'
-                    }
-                }
-            }
-        }
-    });
-
-    // 仓位配置图
-    const positionCtx = document.getElementById('positionChart').getContext('2d');
-    const positionChart = new Chart(positionCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['A股', '港股', '美股', '现金'],
-            datasets: [{
-                data: [60, 25, 10, 5],
-                backgroundColor: [
-                    '#4facfe',
-                    '#667eea',
-                    '#764ba2',
-                    '#e9ecef'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-
-    // 月度收益图
-    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-    const monthlyChart = new Chart(monthlyCtx, {
-        type: 'bar',
-        data: {
-            labels: ['1月', '2月', '3月', '4月', '5月'],
-            datasets: [{
-                label: '月度收益率',
-                data: [3.2, -1.5, 8.7, 2.1, 5.67],
-                backgroundColor: function (context) {
-                    return context.raw >= 0 ? '#28a745' : '#dc3545';
-                }
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(0,0,0,0.1)'
-                    }
-                }
-            }
-        }
-    });
-
-    // 加载数据函数（你可以从JSON文件读取数据）
     async function loadData() {
-        try {
-            const response = await fetch('data.json');
-            const data = await response.json();
+        // 加载基础信息
+        const fundInfo = await fetch('fund_info.csv').then(r=>r.text()).then(parseCSV);
+        const info = {};
+        fundInfo.forEach(row => info[row.key] = row.value);
 
-            // 更新每日数据
-            document.getElementById('nav').textContent = data.nav.current.toFixed(4);
-            document.getElementById('nav-change').textContent =
-                `${data.nav.change >= 0 ? '+' : ''}${data.nav.change.toFixed(4)} (${data.nav.change >= 0 ? '+' : ''}${data.nav.changePercent.toFixed(2)}%)`;
-            document.getElementById('total-assets').textContent = `${data.fund.totalAssets}万`;
-            document.getElementById('total-shares').textContent = `${data.fund.totalShares}万份`;
-            document.getElementById('total-return').textContent = `+${data.nav.totalReturn}%`;
-            document.getElementById('investors').textContent = `${data.fund.investors}人`;
+        // 更新卡片数据
+        document.getElementById('nav').textContent = Number(info.totalAssets || "1.2345").toFixed(4);
+        document.getElementById('nav-change').textContent = info.navChange || "+0.0123 (+1.01%)";
+        document.getElementById('total-assets').textContent = `${info.totalAssets}万`;
+        document.getElementById('total-shares').textContent = `${info.totalShares}万份`;
+        document.getElementById('total-return').textContent = `+${info.totalReturn}%`;
+        document.getElementById('investors').textContent = `${info.investors}人`;
 
-            // 更新月度数据
-            document.getElementById('monthly-return').textContent = `+${data.monthly.monthlyReturn}%`;
-            document.getElementById('annual-return').textContent = `+${data.monthly.annualReturn}%`;
-            document.getElementById('max-drawdown').textContent = `${data.monthly.maxDrawdown}%`;
-            document.getElementById('sharpe-ratio').textContent = data.monthly.sharpeRatio;
+        document.getElementById('monthly-return').textContent = `+${info.monthlyReturn}%`;
+        document.getElementById('annual-return').textContent = `+${info.annualReturn}%`;
+        document.getElementById('max-drawdown').textContent = `${info.maxDrawdown}%`;
+        document.getElementById('sharpe-ratio').textContent = info.sharpeRatio;
 
-            // 更新更新时间
-            document.getElementById('update-time').textContent = data.lastUpdate;
+        document.getElementById('update-time').textContent = info.lastUpdate;
 
-            // 更新图表数据
-            updateCharts(data);
+        // 加载净值历史
+        const navData = await fetch('nav_history.csv').then(r=>r.text()).then(parseCSV);
+        const navLabels = navData.map(row => row.date.slice(5));
+        const navValues = navData.map(row => Number(row.nav));
 
-        } catch (error) {
-            console.error('数据加载失败:', error);
+        if(!navChart) {
+            const navCtx = document.getElementById('navChart').getContext('2d');
+            navChart = new Chart(navCtx, {
+                type: 'line',
+                data: {labels: navLabels, datasets: [{
+                    label: '单位净值', data: navValues,
+                    borderColor: '#4facfe', backgroundColor: 'rgba(79, 172, 254, 0.1)', fill: true, tension: 0.4
+                }]},
+                options: {responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:false},x:{}}}
+            });
+        } else {
+            navChart.data.labels = navLabels;
+            navChart.data.datasets[0].data = navValues;
+            navChart.update();
         }
+
+        // 加载仓位配置
+        const positions = await fetch('positions.csv').then(r=>r.text()).then(parseCSV);
+        const pos = positions[0];
+        const posData = [Number(pos.aStock), Number(pos.hkStock), Number(pos.usStock), Number(pos.cash)];
+        if(!positionChart) {
+            const positionCtx = document.getElementById('positionChart').getContext('2d');
+            positionChart = new Chart(positionCtx, {
+                type: 'doughnut',
+                data: {labels:['A股','港股','美股','现金'], datasets:[{data: posData, backgroundColor:['#4facfe','#667eea','#764ba2','#e9ecef']}]},
+                options: {responsive:true, plugins:{legend:{position:'bottom'}}}
+            });
+        } else {
+            positionChart.data.datasets[0].data = posData;
+            positionChart.update();
+        }
+
+        // 加载月度收益
+        const monthly = await fetch('monthly_returns.csv').then(r=>r.text()).then(parseCSV);
+        const months = monthly.map(row => row.month);
+        const rets = monthly.map(row => Number(row.return));
+        if(!monthlyChart) {
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            monthlyChart = new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {labels: months, datasets:[{
+                    label:'月度收益率', data: rets,
+                    backgroundColor: rets.map(v=> v>=0?'#28a745':'#dc3545')
+                }]},
+                options: {responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+            });
+        } else {
+            monthlyChart.data.labels = months;
+            monthlyChart.data.datasets[0].data = rets;
+            monthlyChart.data.datasets[0].backgroundColor = rets.map(v=> v>=0?'#28a745':'#dc3545');
+            monthlyChart.update();
+        }
+
+        // 加载重仓股表
+        const holdings = await fetch('holdings.csv').then(r=>r.text()).then(parseCSV);
+        const holdingsTable = document.getElementById('holdings-table');
+        holdingsTable.innerHTML = holdings.map(row=>`
+            <tr>
+                <td>${row.code}</td>
+                <td>${row.name}</td>
+                <td>${row.ratio}</td>
+                <td class="${Number(row.change.replace('%',''))>=0?'positive':'negative'}">${row.change}</td>
+            </tr>
+        `).join('');
+
     }
 
-    function updateCharts(data) {
-        // 更新净值走势图
-        navChart.data.labels = data.navHistory.map(item => item.date.substring(5));
-        navChart.data.datasets[0].data = data.navHistory.map(item => item.nav);
-        navChart.update();
-
-        // 更新仓位配置图
-        positionChart.data.datasets[0].data = [
-            data.positions.aStock,
-            data.positions.hkStock,
-            data.positions.usStock,
-            data.positions.cash
-        ];
-        positionChart.update();
-
-        // 更新月度收益图
-        monthlyChart.data.labels = data.monthlyReturns.map(item => item.month);
-        monthlyChart.data.datasets[0].data = data.monthlyReturns.map(item => item.return);
-        monthlyChart.update();
-    }
-
-    // 页面加载时初始化数据
+    // 初始化
     loadData();
 </script>
 </body>
